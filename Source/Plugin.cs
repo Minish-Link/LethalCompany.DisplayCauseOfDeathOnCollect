@@ -17,7 +17,7 @@ namespace CoDOnCollect
     {
         private const string modGUID = "Minish.CauseOfDeathOnCollect";
         private const string modName = "Cause Of Death On Collect";
-        private const string modVersion = "1.0.0.0";
+        private const string modVersion = "1.0.0.1";
 
         private readonly Harmony harmony = new Harmony(modGUID);
 

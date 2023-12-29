@@ -21,22 +21,13 @@ namespace CoDOnCollect.Patches
         [HarmonyPatch(nameof(HUDManager.DisplayNewScrapFound))]
         [HarmonyPrefix]
         static void CauseOfDeathOnCollectPrefixPatch(   ref bool __runOriginal,
-                                                        ref List<GrabbableObject> ___itemsToBeDisplayed,
-                                                        ref AudioSource ___UIAudio,
-                                                        ref AudioClip ___displayCollectedScrapSFXSmall,
-                                                        ref ScrapItemHUDDisplay[] ___ScrapItemBoxes,
-                                                        ref int ___nextBoxIndex,
-                                                        ref Material ___hologramMaterial,
-                                                        ref HUDManager __instance,
-                                                        ref int ___boxesDisplaying,
-                                                        ref int ___bottomBoxIndex,
-                                                        ref float ___bottomBoxYPosition)
+                                                        ref HUDManager __instance)
         {
             if (__runOriginal &&
-                ___itemsToBeDisplayed.Count > 0 &&
-                ___itemsToBeDisplayed[0] != null &&
-                ___itemsToBeDisplayed[0].itemProperties.spawnPrefab != null &&
-                ___itemsToBeDisplayed[0] is RagdollGrabbableObject)
+                __instance.itemsToBeDisplayed.Count > 0 &&
+                __instance.itemsToBeDisplayed[0] != null &&
+                __instance.itemsToBeDisplayed[0].itemProperties.spawnPrefab != null &&
+                __instance.itemsToBeDisplayed[0] is RagdollGrabbableObject)
             {
                 AccessTools.Method(typeof(IEnumerator), "displayScrapTimer");
 
@@ -44,14 +35,14 @@ namespace CoDOnCollect.Patches
                 __runOriginal = false;
 
                 // Copy of original code
-                ___UIAudio.PlayOneShot(___displayCollectedScrapSFXSmall);
-                GameObject gameObject = Object.Instantiate(___itemsToBeDisplayed[0].itemProperties.spawnPrefab, ___ScrapItemBoxes[___nextBoxIndex].itemObjectContainer);
+                __instance.UIAudio.PlayOneShot(__instance.displayCollectedScrapSFXSmall);
+                GameObject gameObject = Object.Instantiate(__instance.itemsToBeDisplayed[0].itemProperties.spawnPrefab, __instance.ScrapItemBoxes[__instance.nextBoxIndex].itemObjectContainer);
                 Object.Destroy(gameObject.GetComponent<NetworkObject>());
                 Object.Destroy(gameObject.GetComponent<GrabbableObject>());
                 Object.Destroy(gameObject.GetComponent<Collider>());
                 gameObject.transform.localPosition = Vector3.zero;
                 gameObject.transform.localScale = gameObject.transform.localScale * 4f;
-                gameObject.transform.rotation = Quaternion.Euler(___itemsToBeDisplayed[0].itemProperties.restingRotation);
+                gameObject.transform.rotation = Quaternion.Euler(__instance.itemsToBeDisplayed[0].itemProperties.restingRotation);
                 Renderer[] componentsInChildren = gameObject.GetComponentsInChildren<Renderer>();
                 for (int i = 0; i < componentsInChildren.Length; i++)
                 {
@@ -61,16 +52,16 @@ namespace CoDOnCollect.Patches
                         componentsInChildren[i].rendererPriority = 70;
                         for (int j = 0; j < sharedMaterials.Length; j++)
                         {
-                            sharedMaterials[j] = ___hologramMaterial;
+                            sharedMaterials[j] = __instance.hologramMaterial;
                         }
                         componentsInChildren[i].sharedMaterials = sharedMaterials;
                         componentsInChildren[i].gameObject.layer = 5;
                     }
                 }
-                ___ScrapItemBoxes[___nextBoxIndex].itemDisplayAnimator.SetTrigger("collect");
+                __instance.ScrapItemBoxes[__instance.nextBoxIndex].itemDisplayAnimator.SetTrigger("collect");
 
                 // Edited code to add cause of death to collection message
-                RagdollGrabbableObject ragdollGrabbableObject = ___itemsToBeDisplayed[0] as RagdollGrabbableObject;
+                RagdollGrabbableObject ragdollGrabbableObject = __instance.itemsToBeDisplayed[0] as RagdollGrabbableObject;
                 if (ragdollGrabbableObject != null && ragdollGrabbableObject.ragdoll != null)
                 {
                     //___ScrapItemBoxes[___nextBoxIndex].headerText.text = ragdollGrabbableObject.ragdoll.playerScript.playerUsername + " collected!";
@@ -129,29 +120,29 @@ namespace CoDOnCollect.Patches
                             causeOfDeathString = "(Unknown Cause of Death)";
                             break;
                     }
-                    ___ScrapItemBoxes[___nextBoxIndex].headerText.text = ragdollGrabbableObject.ragdoll.playerScript.playerUsername + " collected! " + causeOfDeathString;
+                    __instance.ScrapItemBoxes[__instance.nextBoxIndex].headerText.text = ragdollGrabbableObject.ragdoll.playerScript.playerUsername + " collected! " + causeOfDeathString;
                 }
                 else
                 {
                     //___ScrapItemBoxes[___nextBoxIndex].headerText.text = "Body collected!";
-                    ___ScrapItemBoxes[___nextBoxIndex].headerText.text = "Body collected! (Unknown Cause of Death)";
+                    __instance.ScrapItemBoxes[__instance.nextBoxIndex].headerText.text = "Body collected! (Unknown Cause of Death)";
                 }
 
                 // Back to original code
-                if (___boxesDisplaying > 0)
+                if (__instance.boxesDisplaying > 0)
                 {
-                    ___ScrapItemBoxes[___nextBoxIndex].UIContainer.anchoredPosition = new Vector2(___ScrapItemBoxes[___nextBoxIndex].UIContainer.anchoredPosition.x, ___ScrapItemBoxes[___bottomBoxIndex].UIContainer.anchoredPosition.y - 124f);
+                    __instance.ScrapItemBoxes[__instance.nextBoxIndex].UIContainer.anchoredPosition = new Vector2(__instance.ScrapItemBoxes[__instance.nextBoxIndex].UIContainer.anchoredPosition.x, __instance.ScrapItemBoxes[__instance.bottomBoxIndex].UIContainer.anchoredPosition.y - 124f);
                 }
                 else
                 {
-                    ___ScrapItemBoxes[___nextBoxIndex].UIContainer.anchoredPosition = new Vector2(___ScrapItemBoxes[___nextBoxIndex].UIContainer.anchoredPosition.x, ___bottomBoxYPosition);
+                    __instance.ScrapItemBoxes[__instance.nextBoxIndex].UIContainer.anchoredPosition = new Vector2(__instance.ScrapItemBoxes[__instance.nextBoxIndex].UIContainer.anchoredPosition.x, __instance.bottomBoxYPosition);
                 }
-                ___bottomBoxIndex = ___nextBoxIndex;
+                __instance.bottomBoxIndex = __instance.nextBoxIndex;
                 __instance.StartCoroutine(__instance.displayScrapTimer(gameObject));
                 __instance.playScrapDisplaySFX();
-                ___boxesDisplaying++;
-                ___nextBoxIndex = (___nextBoxIndex + 1) % 3;
-                ___itemsToBeDisplayed.RemoveAt(0);
+                __instance.boxesDisplaying++;
+                __instance.nextBoxIndex = (__instance.nextBoxIndex + 1) % 3;
+                __instance.itemsToBeDisplayed.RemoveAt(0);
             }
         }
 
