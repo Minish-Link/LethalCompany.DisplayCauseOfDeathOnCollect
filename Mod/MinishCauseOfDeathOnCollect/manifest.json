@@ -4,6 +4,6 @@
     "website_url": "https://github.com/Minish-Link/LethalCompany.DisplayCauseOfDeathOnCollect",
     "description": "Appends the player's cause of death to the scrap collection message when a corpse is brought into the ship",
     "dependencies": [
-        "BepInEx-BepInExPack-5.4.2100"
+        "BepInEx-BepInExPack-5.4.2200"
     ]
 }
